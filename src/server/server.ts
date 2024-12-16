@@ -13,7 +13,7 @@ const server = Fastify({
 
 
 server.register(fastifyPostgres, {
-    connectionString: 'postgresql://postgres:CWkjcgoPPDnQlcwisseKueLPIMtoqRIs@autorack.proxy.rlwy.net:19322/railway'
+    connectionString: process.env.POSTGRES_DB_CONNECTION
 })
 
 interface User {
