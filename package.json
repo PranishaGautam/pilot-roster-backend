@@ -4,9 +4,9 @@
   "description": "Backend Server for Pilot Roster Application",
   "main": "src/server/server.ts",
   "scripts": {
-    "start": "node src/server",
-    "dev": "tsnd --respawn --transpile-only --exit-child src/server/server.ts",
-    "nodemon": "nodemon --watch src --exec tsnd src/server/server.ts"
+    "start": "node src/server.ts",
+    "dev": "tsnd --respawn --transpile-only --exit-child src/server.ts",
+    "nodemon": "nodemon --watch src --exec tsnd src/server.ts"
   },
   "author": "Pranisha Gautam",
   "license": "ISC",
