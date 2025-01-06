@@ -32,7 +32,7 @@ export const authenticateAdmin = () => {
             if (role === 'admin') {
                 return;
             }
-            
+
             return reply.status(403).send({error: 'Access denied'});
 
         } catch (error) {

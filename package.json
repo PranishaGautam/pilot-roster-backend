@@ -4,7 +4,7 @@
   "description": "Backend Server for Pilot Roster Application",
   "main": "src/server/server.ts",
   "scripts": {
-    "start": "node src/server.ts",
+    "start": "nodemon --watch src --exec tsnd --respawn --transpile-only --exit-child src/server.ts",
     "dev": "tsnd --respawn --transpile-only --exit-child src/server.ts",
     "nodemon": "nodemon --watch src --exec tsnd src/server.ts"
   },
