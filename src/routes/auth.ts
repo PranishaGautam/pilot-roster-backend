@@ -8,10 +8,9 @@ import { config } from '../config/env_variables';
 const jwtSecret = config.jwtSecret;
 const bycryptSaltRounds = config.bycryptSaltRounds;
 
-import { getUserByEmail, getPasswordFromEmail, insertNewUser } from "../queries/userQueries";
-import { UserRole, User } from "../interfaces/users-interface";
+import { insertNewUser, getUserByParameter } from "../queries/userQueries";
+import { User } from "../interfaces/users-interface";
 import { RegisterRequestBody, RegisterResponseBody, LoginRequestBody, LoginResponse } from "../interfaces/users-interface";
-
 
 const opts = {
     schema: {
@@ -33,9 +32,9 @@ async function AuthRoutes (fastify: FastifyInstance) {
     // Endpoint for register
     fastify.post('/register', opts, async (request: FastifyRequest<{Body: RegisterRequestBody}>, reply: FastifyReply) => {
         const client  = await fastify.pg.connect();
-        const { email, password, firstName, lastName, role } = request.body;
+        const { email, password, first_name, last_name, role } = request.body;
         
-        const readQuery = getUserByEmail(); // Calling the method to get the processed query
+        const readQuery = getUserByParameter('insensitive', 'email'); // Calling the method to get the processed query
         const insertQuery = insertNewUser(); // Calling the method to get the processed query
 
         try {
@@ -45,19 +44,18 @@ async function AuthRoutes (fastify: FastifyInstance) {
                 return reply.status(409).send({error: `Email already exists. Please try loginng in`});
             }
 
-            const validRoles = ['admin', 'pilot']
+            const validRoles = ['admin', 'pilot'];
 
             // Validate the allowed role
             if (!validRoles.includes(role)) {
                 return reply.status(400).send({error: `Invalid role. Allowed roles are: ${validRoles}`});
             }
 
-
             // Hash Passwords
             const hashedPassword = await bcrypt.hash(password, bycryptSaltRounds);
 
             // Insert new record in the database
-            const result = await client.query(insertQuery, [firstName, lastName, email, hashedPassword, role]);
+            const result = await client.query(insertQuery, [first_name, last_name, email, hashedPassword, role]);
             
             const row = result.rows[0];
 
@@ -76,7 +74,7 @@ async function AuthRoutes (fastify: FastifyInstance) {
 
         const client  = await fastify.pg.connect();
         const { email, password } = request.body;
-        const query = getPasswordFromEmail(); // Calling the method to get the processed query
+        const query = getUserByParameter('all', 'email'); // Calling the method to get the processed query
 
         try {
             // Fetching user from the database
@@ -86,7 +84,7 @@ async function AuthRoutes (fastify: FastifyInstance) {
                 reply.status(404).send({error: `Username '${email}' not found in the database`});
             }
 
-            const user = rows[0];
+            const user: User = rows[0];
 
             // Validate password
             const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -94,12 +92,11 @@ async function AuthRoutes (fastify: FastifyInstance) {
                 return reply.status(401).send({error: `Invalid credentials`});
             }
 
-
             // Generate JWT token
             const token = jwt.sign(
                 {
-                    userId: user.id, 
-                    userEmail: user.email,
+                    id: user.id, 
+                    email: user.email,
                     role: user.role
                 },
                 jwtSecret,
@@ -107,7 +104,7 @@ async function AuthRoutes (fastify: FastifyInstance) {
                     expiresIn: '1h'
                 }
             );
-            
+
             const response: LoginResponse = { token, role: user.role };
             return reply.send(response);
         } catch(error) {

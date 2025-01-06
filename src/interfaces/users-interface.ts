@@ -3,14 +3,14 @@ export interface UserRole {
 }
 
 export interface User {
-    userId: number;
-    firstName: string;
-    lastName: string;
-    userEmail: string;
-    userPassword: string;
-    userRole: UserRole["role"];
-    startDate: Date;
-    endDate: Date;
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    password: string;
+    role: UserRole["role"];
+    start_date: Date;
+    end_date: Date;
 }
 
 export interface GetUserParams {
@@ -20,8 +20,8 @@ export interface GetUserParams {
 export interface RegisterRequestBody {
     email: string;
     password: string;
-    firstName: string;
-    lastName: string;
+    first_name: string;
+    last_name: string;
     role: UserRole["role"];
 }
 

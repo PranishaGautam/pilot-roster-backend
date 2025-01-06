@@ -1,9 +1,8 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 import { User, GetUserParams } from '../interfaces/users-interface';
-import { getAllUsers, getUserById } from '../queries/userQueries';
-import { authenticateAdmin } from '../middleware/auth';
-
+import { getAllUsers, getUserByParameter } from '../queries/userQueries';
+import { authenticateAdmin, AuthenticateAdminOrCurrrentUser } from '../middleware/auth';
 
 async function UserRoutes (fastify: FastifyInstance) {
     
@@ -25,11 +24,11 @@ async function UserRoutes (fastify: FastifyInstance) {
     });
 
     // Endpoint to get the user detail with the id
-    fastify.get('/user/:id', async (request: FastifyRequest<{Params: GetUserParams}>, reply: FastifyReply) => {
+    fastify.get('/user/:id', { preHandler: AuthenticateAdminOrCurrrentUser() }, async (request: FastifyRequest<{Params: GetUserParams}>, reply: FastifyReply) => {
     
         const client = await fastify.pg.connect();
         const { id } = request.params; // Getting the path parameter
-        const query = getUserById(); // Calling the method to get the query
+        const query = getUserByParameter('insensitive', 'id'); // Calling the method to get the query
     
         try {
             const { rows } = await client.query(query, [id]);

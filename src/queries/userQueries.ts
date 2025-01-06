@@ -1,57 +1,63 @@
-import { selectColumns } from "../utils/columns";
-import { UserTableColumns } from "../database/columns";
+import { getSelectColumnsForTable } from "../utils/columns";
+import { User } from "../interfaces/users-interface";
 
-// ***********************************************************************
-// ***********************************************************************
-// For reference to select column names from the file 'database/columns'
-
-// userId: 'id',
-// firstName: 'first_name',
-// lastName: 'last_name',
-// userEmail: 'email',
-// userPassword: 'password',
-// userRole: 'role',
-// startDate: 'start_date',
-// endDate: 'end_date'
-
-// ***********************************************************************
-// ***********************************************************************
-
+// Defining the table name
 const tableName = 'users';
 
-const allColumns = ['userId', 'firstName', 'lastName', 'userEmail', 'userPassword', 'userRole', 'startDate', 'endDate'];
-const sensitiveColumns = ['userPassword'];
-const allColumnsExcludingPassword = allColumns.filter((column) => !sensitiveColumns.includes(column));
+// Defining the columns as an object for usage
+const UserTableColumns = {
+    id: 'id',
+    first_name: 'first_name',
+    last_name: 'last_name',
+    email: 'email',
+    password: 'password',
+    role: 'role',
+    start_date: 'start_date',
+    end_date: 'end_date'
+} as const;
+
+// Defining the type of columns for the table
+type UserColumns = keyof User;
+
+const userTableAllColumns: UserColumns[] = ['id', 'first_name', 'last_name', 'email', 'password', 'role', 'start_date', 'end_date'];
+const userTableSensitiveColumns: UserColumns[] = ['password'];
+const allColumnsExcludingPassword = userTableAllColumns.filter((column) => !userTableSensitiveColumns.includes(column));
 
 // Query to get the users by ID
 export const getAllUsers = () => {
-    const columns = selectColumns(UserTableColumns, allColumnsExcludingPassword);
+    const columns = getSelectColumnsForTable('users', allColumnsExcludingPassword);
     return `
-        SELECT ${columns} FROM ${tableName}
+        SELECT ${columns} 
+        FROM ${tableName} 
+        WHERE ${UserTableColumns.end_date} IS NULL OR ${UserTableColumns.end_date} > now();
     `
 };
 
-// Query to get a user by ID
-export const getUserById = () => {
-    const columns = selectColumns(UserTableColumns, allColumnsExcludingPassword);
-    return `SELECT ${columns} FROM ${tableName} WHERE ${UserTableColumns.userId} = $1`
-};
+// Query to get User by Parameter
+export const getUserByParameter = (requiredColumns: 'insensitive' | 'all', param: keyof User) => {
     
-// Query to get a user by Email
-export const getUserByEmail = () => {
-    const columns = selectColumns(UserTableColumns, allColumnsExcludingPassword);
-    return `SELECT ${columns} FROM ${tableName} WHERE ${UserTableColumns.userEmail} = $1`
+    let returningColumns: string;
+
+    switch (requiredColumns) {
+        case 'all':
+            returningColumns = getSelectColumnsForTable('users', userTableAllColumns);
+            break;
+        case 'insensitive':
+            returningColumns = getSelectColumnsForTable('users', allColumnsExcludingPassword);
+            break;
+        default:
+            returningColumns = getSelectColumnsForTable('users', allColumnsExcludingPassword);
+            break;
+    }
+    
+    return `SELECT ${returningColumns} FROM ${tableName} WHERE ${param} =$1`;
 }
 
-export const getPasswordFromEmail = () => {
-    const columns = selectColumns(UserTableColumns, ['userId', 'userEmail', 'userPassword', 'userRole']);
-    return `SELECT ${columns} FROM ${tableName} WHERE ${UserTableColumns.userEmail} = $1`
-}
 
 // Query to add a record to the users table
 export const insertNewUser = () => {
-    const columns = selectColumns(UserTableColumns, allColumns);
-    const returningColumns = selectColumns(UserTableColumns,  ['userId', 'userEmail', 'userRole'])
+    const columns = getSelectColumnsForTable('users', userTableAllColumns);
+    const returningColumns = getSelectColumnsForTable('users',  ['id', 'email', 'role'])
     return `
         INSERT INTO ${tableName} (${columns})
         VALUES (nextval('users_id_seq'::regclass), $1, $2, $3, $4, $5, NOW(), NULL)

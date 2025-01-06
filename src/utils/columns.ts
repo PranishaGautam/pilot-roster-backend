@@ -1,4 +1,5 @@
+import TableSchemas from '../interfaces/schema-interface';
 
-export const selectColumns = (columns: Record<string, string>, selected: string[]): string => {
-    return selected.map((column) => columns[column]).join(', ');
+export const getSelectColumnsForTable = <T extends keyof TableSchemas, K extends keyof TableSchemas[T]>(table: T, columns: K[]): string => {
+    return columns.join(", ");
 }
