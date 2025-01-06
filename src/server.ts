@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 
-import postgresPlugin from './database/postgres';
+import postgresPlugin from './database/postgres_db_connection';
 import routes from './routes/index';
 
 const PORT = 5000;

@@ -11,13 +11,16 @@ CREATE TABLE users (
 	password varchar not null
 )
 
-INSERT INTO public.users
-(id, first_name, last_name, "role", start_date, end_date, email, "password")
-VALUES(nextval('users_id_seq'::regclass), 'Pranisha', 'Gautam', 'Pilot', '2024-01-01', null, 'xyzpranisha@gmail.com', 'password123');
+alter table users 
+add constraint check_valid_role check(role in ('admin', 'pilot'));
 
-INSERT INTO public.users
-(id, first_name, last_name, "role", start_date, end_date, email, "password")
-VALUES(nextval('users_id_seq'::regclass), 'Saurav', 'Bhattarai', 'Admin', '2024-01-01', null, 'saurav.bhattarai@gmail.com', 'password1234');
+-- INSERT INTO public.users
+-- (id, first_name, last_name, "role", start_date, end_date, email, "password")
+-- VALUES(nextval('users_id_seq'::regclass), 'Pranisha', 'Gautam', 'pilot', '2024-01-01', null, 'xyzpranisha@gmail.com', 'password123');
+
+-- INSERT INTO public.users
+-- (id, first_name, last_name, "role", start_date, end_date, email, "password")
+-- VALUES(nextval('users_id_seq'::regclass), 'Saurav', 'Bhattarai', 'admin', '2024-01-01', null, 'saurav.bhattarai@gmail.com', 'password1234');
 
 create table pilots (
 	pilot_id serial primary key,

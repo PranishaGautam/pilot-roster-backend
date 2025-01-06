@@ -1,15 +1,21 @@
-import { FastifyInstance } from 'fastify';
-import { User } from '../interfaces/users-interface';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+
+import { User, GetUserParams } from '../interfaces/users-interface';
+import { getAllUsers, getUserById } from '../queries/userQueries';
+import { authenticateAdmin } from '../middleware/auth';
 
 
 async function UserRoutes (fastify: FastifyInstance) {
     
-    fastify.get('/', async (request, reply) => {
+    fastify.get('/', { preHandler: authenticateAdmin() }, async (_request, reply: FastifyReply) => {
+
         const client  = await fastify.pg.connect();
+        const query = getAllUsers(); // Calling the method to get the query
 
         try {
-            const { rows } = await client.query<User>("SELECT * FROM users");
-            reply.send(rows);
+            const { rows } = await client.query(query);
+            const users: User[] = rows;
+            reply.send(users);
         } catch (error) {
             fastify.log.error(error);
             reply.status(500).send({error: "Database query failed"});
@@ -19,20 +25,22 @@ async function UserRoutes (fastify: FastifyInstance) {
     });
 
     // Endpoint to get the user detail with the id
-    fastify.get<{Params: { id: string }}>('/user/:id', async (request, reply) => {
+    fastify.get('/user/:id', async (request: FastifyRequest<{Params: GetUserParams}>, reply: FastifyReply) => {
     
         const client = await fastify.pg.connect();
-        const { id } = request.params;
+        const { id } = request.params; // Getting the path parameter
+        const query = getUserById(); // Calling the method to get the query
     
         try {
-            const { rows } = await client.query<User>("SELECT * FROM users WHERE id = $1", [id]);
+            const { rows } = await client.query(query, [id]);
     
             if (rows?.length === 0) {
-                reply.status(404).send({error: `User Id: ${id} not found in the database. Fuck you`});
+                reply.status(404).send({error: `User Id: ${id} not found in the database`});
             } else if (rows?.length > 1) {
                 reply.status(500).send({error: `Multiple users found with id: ${id}, which is not supposed to happen`});
             } else {
-                reply.send(rows); // Send the single user record
+                const user: User = rows[0];
+                reply.send(user); // Send the single user record
             }
         } catch (error) {
             fastify.log.error(error);
@@ -40,7 +48,7 @@ async function UserRoutes (fastify: FastifyInstance) {
         } finally {
             client.release();
         }
-    })
+    });
 }
 
 export default UserRoutes;
